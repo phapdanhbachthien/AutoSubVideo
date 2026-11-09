@@ -1,0 +1,4 @@
+-r requirements-asr.txt
+-r requirements-tts.txt
+-r requirements-local.txt
+-r requirements-ocr.txt

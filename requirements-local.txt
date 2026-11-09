@@ -1,0 +1,4 @@
+onnxruntime==1.23.2
+soundfile==0.13.1
+sea-g2p==0.10.0
+tokenizers==0.22.1
