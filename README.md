@@ -1,5 +1,13 @@
 # AutoSubVideo
 
+## Tải bản Windows 64-bit
+
+[Tải AutoSubVideo-Windows-x64.zip (khoảng 1,5 GB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/v0.1.0-preview/AutoSubVideo-Windows-x64.zip)
+
+Giải nén toàn bộ rồi mở **AutoSubVideo.exe**. Gói kèm Python và 25 giọng gốc, gồm Ngọc Huyền. Đây là bản thử nghiệm, chưa chạy thử trực tiếp trên Windows.
+
+[Trang Release và SHA-256](https://github.com/phapdanhbachthien/AutoSubVideo/releases/tag/v0.1.0-preview)
+
 Ứng dụng desktop hướng tới Windows: tạo phụ đề từ video/âm thanh, dịch đa ngôn ngữ, tạo giọng đọc và lồng tiếng. Phần điều phối và giao diện được viết mới; các giọng, mô hình ONNX và dữ liệu phù hợp từ gói v-translate của bạn được nhập vào thư mục `bundle` và sử dụng trực tiếp.
 
 ## Các chức năng
