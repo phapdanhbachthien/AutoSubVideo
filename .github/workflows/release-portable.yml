@@ -1,5 +1,8 @@
 name: Publish Windows portable
 on:
+  push:
+    branches: [release-assets-v0.1.0-preview]
+    paths: [UPLOAD_READY]
   workflow_dispatch:
     inputs:
       asset_ref:
@@ -14,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.asset_ref }}
+          ref: ${{ inputs.asset_ref || github.ref_name }}
       - name: Restore package and verify checksum
         run: |
           cat parts/part-* > AutoSubVideo-Windows-x64.zip
@@ -23,5 +26,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release upload v0.1.0-preview AutoSubVideo-Windows-x64.zip AutoSubVideo-Windows-x64.sha256 --repo "$GITHUB_REPOSITORY" --clobber
+          gh release upload v0.1.0-preview AutoSubVideo-Windows-x64.zip AutoSubVideo-Windows-x64.sha256 AutoSubVideo-25-original-voices.zip --repo "$GITHUB_REPOSITORY" --clobber
           gh release edit v0.1.0-preview --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
