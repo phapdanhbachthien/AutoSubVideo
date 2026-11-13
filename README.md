@@ -1,6 +1,6 @@
-# Thiên Media Player
+# Thiên Media Player // Cyber Edition
 
-Ứng dụng Windows riêng để nghe nhạc và xem video, không phụ thuộc AutoSubVideo. Giao diện tiếng Việt; Qt 6 / FFmpeg xử lý media.
+Ứng dụng Windows riêng để nghe nhạc và xem video, không phụ thuộc AutoSubVideo. Giao diện cyberpunk tiếng Việt: nền lưới đen tím, neon cyan/hồng, khung vát góc và nút phát vàng neon. Qt 6 / FFmpeg xử lý media; hiệu ứng giao diện tĩnh không che vùng video.
 
 ## Chức năng
 
@@ -23,7 +23,7 @@ Các định dạng thông dụng: MP4/MKV/MOV/AVI/WebM/WMV/MPEG/TS; MP3/FLAC/WA
 
 ## Dùng gói Windows portable
 
-1. Giải nén toàn bộ `ThienMediaPlayer-Windows-x64.zip`.
+1. Giải nén toàn bộ `ThienMediaPlayer-Cyber-Windows-x64.zip`.
 2. Mở `ThienMediaPlayer.exe`. Giữ thư mục `python` và `player` cạnh file EXE; không cần cài Python riêng.
 3. Bấm **Mở tệp**, **Mở thư mục** hoặc kéo nhạc/video vào cửa sổ. Playlist mở bài bằng nhấp đôi hoặc Enter.
 4. Nếu có lỗi khởi động, chạy `Kiem-tra.cmd`; kết quả ở `diagnostics.json`. Log ở `%LOCALAPPDATA%\ThienMediaPlayer\logs\startup.log`.
@@ -76,6 +76,6 @@ Hoặc dùng `scripts/package-portable.py` với Windows CPython 3.12 x64, 4 whe
 python -m unittest discover -s tests -v
 ```
 
-Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy 8 bài kiểm tra trên Linux, gồm playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
+Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy **10/10 bài kiểm tra** trên Linux/Xorg, gồm kiểm tra pixel video hiển thị thật, lớp phụ đề hiển thị trên video, playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
 
 Thiết lập cá nhân lưu qua QSettings, gồm playlist/vị trí khi bật nhớ. Khi phát triển có thể đặt `THIEN_PLAYER_CONFIG` tới tệp INI riêng. Các định dạng có DRM, Blu-ray/DVD menu, truyền Chromecast và cân bằng âm thanh EQ chưa nằm trong bản này.

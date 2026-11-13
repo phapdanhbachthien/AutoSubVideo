@@ -65,6 +65,50 @@ class PlaybackTests(unittest.TestCase):
         self.assertEqual(self.decode('full-hd.mp4'), (1920,1080))
         self.assertEqual(self.decode('eight-k.mkv'), (7680,4320))
 
+    @unittest.skipUnless(os.getenv('DISPLAY') and os.getenv('QT_QPA_PLATFORM')=='xcb', 'Visible X11 display required')
+    def test_video_is_visible_on_the_actual_window(self):
+        w=self.make_window()
+        try:
+            w.move(0,0)
+            w.add_sources([self.base/'full-hd.mp4'],autoplay=True)
+            self.assertTrue(until(lambda:w.video.videoSink().videoFrame().isValid()))
+            w.player.pause()
+            QTest.qWait(300)
+            image=w.screen().grabWindow(0).toImage()
+            colors=[]
+            for fx in (.2,.4,.6,.8):
+                position=w.video.mapToGlobal(QPoint(int(w.video.width()*fx),int(w.video.height()*.5)))
+                color=image.pixelColor(position)
+                colors.append(max(color.red(),color.green(),color.blue())-min(color.red(),color.green(),color.blue()))
+            self.assertGreater(sum(value>100 for value in colors),2,'Decoded video must be visible rather than a black surface')
+        finally:
+            w.close();APP.processEvents()
+
+    @unittest.skipUnless(os.getenv('DISPLAY') and os.getenv('QT_QPA_PLATFORM')=='xcb', 'Visible X11 display required')
+    def test_subtitle_is_visible_above_native_video_surface(self):
+        w=self.make_window()
+        try:
+            w.move(0,0);w.activateWindow()
+            w.add_sources([self.base/'long.mp4'],autoplay=True)
+            self.assertTrue(until(lambda:w.video.videoSink().videoFrame().isValid()))
+            w.player.pause()
+            w.captions=[Caption(0,5000,'PHU DE TIENG VIET')]
+            w.position_changed(1000)
+            QTest.qWait(250)
+            self.assertTrue(w.subtitle.isVisible())
+            area=w.subtitle.geometry()
+            def white_pixels():
+                image=w.screen().grabWindow(0).toImage()
+                return sum(1 for x in range(area.left()+8,area.right()-8,2)
+                           for y in range(area.top()+4,area.bottom()-4,2)
+                           if min(image.pixelColor(x,y).red(),image.pixelColor(x,y).green(),image.pixelColor(x,y).blue())>210)
+            self.assertGreater(white_pixels(),25)
+            w.clear_subtitles();QTest.qWait(80)
+            self.assertFalse(w.subtitle.isVisible())
+            self.assertLess(white_pixels(),5)
+        finally:
+            w.close();APP.processEvents()
+
     def test_real_audio_loading_and_clock_progress(self):
         player = QMediaPlayer()
         player.setSource(QUrl.fromLocalFile(str(self.base/'song.wav')))

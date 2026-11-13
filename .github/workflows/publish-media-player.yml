@@ -1,8 +1,8 @@
-name: Publish Thien Media Player
+name: Publish Cyber Media Player
 on:
   push:
-    branches: [media-player-release-assets]
-    paths: [MEDIA_PLAYER_READY]
+    branches: [media-player-cyber-release-assets]
+    paths: [CYBER_READY]
 permissions:
   contents: write
 jobs:
@@ -10,14 +10,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Restore and verify portable ZIP
+      - name: Restore and verify Windows ZIP
         run: |
-          cat release-parts/part-* > ThienMediaPlayer-Windows-x64.zip
-          sha256sum --check ThienMediaPlayer-Windows-x64.sha256
-      - name: Publish separate media player Release
+          cat release-parts/part-* > ThienMediaPlayer-Cyber-Windows-x64.zip
+          sha256sum --check ThienMediaPlayer-Cyber-Windows-x64.sha256
+      - name: Upload and publish Cyber Edition
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create thien-media-player-v0.1.0-preview --repo "$GITHUB_REPOSITORY" --target media-player --draft --prerelease --title 'Thiên Media Player — Windows x64 (thử nghiệm)' --notes-file RELEASE-NOTES.md
-          gh release upload thien-media-player-v0.1.0-preview ThienMediaPlayer-Windows-x64.zip ThienMediaPlayer-Windows-x64.sha256 ThienMediaPlayer-source.zip ThienMediaPlayer.png --repo "$GITHUB_REPOSITORY"
-          gh release edit thien-media-player-v0.1.0-preview --repo "$GITHUB_REPOSITORY" --draft=false --prerelease
+          gh release create thien-media-player-cyber-v0.1.0-preview --repo "$GITHUB_REPOSITORY" --target media-player --draft --prerelease --title 'Thiên Media Player // Cyber Edition — Windows x64' --notes-file RELEASE-NOTES.md
+          gh release upload thien-media-player-cyber-v0.1.0-preview ThienMediaPlayer-Cyber-Windows-x64.zip ThienMediaPlayer-Cyber-Windows-x64.sha256 ThienMediaPlayer-Cyber-source.zip ThienMediaPlayer-Cyber-preview.png --repo "$GITHUB_REPOSITORY"
+          gh release edit thien-media-player-cyber-v0.1.0-preview --repo "$GITHUB_REPOSITORY" --draft=false --prerelease

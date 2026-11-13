@@ -6,7 +6,7 @@ import sys
 
 os.environ.setdefault('QT_MEDIA_BACKEND', 'ffmpeg')
 
-from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QEvent, QSize
+from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QEvent, QSize, QPoint
 from PySide6.QtGui import QAction, QKeySequence, QFont, QImage
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QFrame, QLabel, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSplitter, QSlider, QComboBox, QListWidget,
@@ -17,29 +17,7 @@ from PySide6.QtMultimediaWidgets import QVideoWidget
 
 from .library import (Playlist, MEDIA_EXTENSIONS, SEEK_SECONDS, seek_target, time_label,
                       normalize_source, source_title, read_playlist, write_playlist, read_srt, caption_text)
-
-
-STYLE = '''
-QMainWindow, QDialog { background: #111722; color: #e7edf8; }
-QWidget { color: #e7edf8; font-family: "Segoe UI", "DejaVu Sans"; font-size: 13px; }
-QMenuBar, QMenu { background: #182130; color: #e7edf8; }
-QMenu::item:selected { background: #27527c; }
-QFrame#panel { background: #182130; border: 1px solid #27364b; border-radius: 12px; }
-QPushButton { background: #223149; border: 1px solid #334765; border-radius: 7px; padding: 8px 12px; }
-QPushButton:hover { background: #304c6e; border-color: #66bbff; }
-QPushButton:checked { background: #205889; border-color: #79c4ff; }
-QPushButton:disabled { color: #627084; background: #1a2535; border-color: #27364b; }
-QPushButton#primary { background: #4cb4ff; color: #061322; font-weight: bold; }
-QLineEdit, QComboBox, QSpinBox { background: #111b2a; border: 1px solid #344660; border-radius: 6px; padding: 6px; }
-QListWidget { background: #141f2e; border: none; outline: none; }
-QListWidget::item { padding: 10px 7px; border-bottom: 1px solid #202f42; }
-QListWidget::item:selected { background: #24537d; border-radius: 5px; }
-QSlider::groove:horizontal { height: 6px; background: #344155; border-radius: 3px; }
-QSlider::sub-page:horizontal { background: #56b7ff; border-radius: 3px; }
-QSlider::handle:horizontal { width: 14px; margin: -5px 0; background: #d1eeff; border-radius: 7px; }
-QStatusBar { color: #9fafc6; }
-QToolTip { background: #223149; color: white; border: 1px solid #56b7ff; }
-'''
+from .theme import STYLE as CYBER_STYLE, CyberBackground, CyberPanel
 
 
 class SeekSlider(QSlider):
@@ -63,10 +41,51 @@ class SeekSlider(QSlider):
             super().mouseReleaseEvent(event)
 
 
+class VideoSurface(QWidget):
+    def resizeEvent(self,event):
+        super().resizeEvent(event)
+        if hasattr(self,'caption'):
+            self.caption.position_overlay()
+
+
+class CaptionOverlay(QLabel):
+    def __init__(self,anchor,host):
+        super().__init__(host,Qt.Tool | Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint | Qt.WindowDoesNotAcceptFocus)
+        self.anchor=anchor
+        self.host=host
+        self.setAttribute(Qt.WA_ShowWithoutActivating)
+        self.setAttribute(Qt.WA_TransparentForMouseEvents)
+        self.setTextFormat(Qt.PlainText)
+        self.setWordWrap(True)
+        self.setAlignment(Qt.AlignCenter)
+        self.setStyleSheet('background: #05080f; color: white; font-size: 23px; font-weight: 700; padding: 8px;')
+        self.hide()
+        QApplication.instance().applicationStateChanged.connect(self.application_state_changed)
+
+    def application_state_changed(self,state):
+        self.position_overlay()
+
+    def position_overlay(self):
+        parent=self.anchor
+        height=min(max(48,self.heightForWidth(max(1,parent.width()))+8),max(48,parent.height()//3))
+        point=parent.mapToGlobal(QPoint(0,max(0,parent.height()-height)))
+        self.setGeometry(point.x(),point.y(),parent.width(),height)
+        visible=bool(self.text()) and parent.isVisible() and not self.host.isMinimized() and QApplication.applicationState()==Qt.ApplicationActive and QApplication.activeModalWidget() is None
+        self.setVisible(visible)
+        if visible:self.raise_()
+
+    def setText(self,text):
+        super().setText(text)
+        self.position_overlay()
+
+    def clear(self):
+        self.setText('')
+
+
 class MainWindow(QMainWindow):
     def __init__(self, settings=None):
         super().__init__()
-        self.setWindowTitle('Thiên Media Player — Nhạc & Video')
+        self.setWindowTitle('Thiên Media Player // Cyber Edition')
         self.resize(1260, 830)
         self.setMinimumSize(960, 680)
         self.setAcceptDrops(True)
@@ -83,7 +102,7 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._menus()
         self._connect()
-        self.setStyleSheet(STYLE)
+        self.setStyleSheet(CYBER_STYLE)
         self.audio.setVolume(.7)
         self.restore()
         QApplication.instance().installEventFilter(self)
@@ -96,7 +115,7 @@ class MainWindow(QMainWindow):
         return button
 
     def _build_ui(self):
-        central = QWidget()
+        central = CyberBackground()
         self.setCentralWidget(central)
         outer = QVBoxLayout(central)
         outer.setContentsMargins(18, 12, 18, 12)
@@ -104,11 +123,11 @@ class MainWindow(QMainWindow):
         self.header = QWidget()
         head = QHBoxLayout(self.header)
         head.setContentsMargins(0, 0, 0, 0)
-        brand = QLabel('THIÊN  /  MEDIA PLAYER')
-        brand.setStyleSheet('font-size: 21px; font-weight: 700; color: #7ccaff;')
+        brand = QLabel('THIÊN // CYBER PLAYER')
+        brand.setStyleSheet('font-size: 23px; font-weight: 700; color: #49f3fa; letter-spacing: 2px;')
         head.addWidget(brand)
         self.quality = QLabel('FULL HD · 4K · 8K')
-        self.quality.setStyleSheet('color: #a5b9d5;')
+        self.quality.setStyleSheet('color: #fa78c5; border: 1px solid #68345d; background: #1d122a; padding: 6px 10px;')
         head.addStretch()
         head.addWidget(self.quality)
         self._button('+ Mở tệp', self.open_files, head, 'Ctrl+O · Chọn nhiều tệp nhạc/video')
@@ -116,14 +135,15 @@ class MainWindow(QMainWindow):
         outer.addWidget(self.header)
 
         self.splitter = QSplitter(Qt.Horizontal)
-        self.display_panel = QFrame()
+        self.display_panel = CyberPanel()
         self.display_panel.setObjectName('panel')
         display = QVBoxLayout(self.display_panel)
         display.setContentsMargins(8, 8, 8, 8)
         self.now = QLabel('Chưa có tệp — kéo nhạc hoặc video vào cửa sổ')
-        self.now.setStyleSheet('font-size: 15px; font-weight: 600; padding: 5px;')
+        self.now.setTextFormat(Qt.PlainText)
+        self.now.setStyleSheet('font-size: 15px; font-weight: 600; color: #b4e5f2; padding: 5px;')
         display.addWidget(self.now)
-        self.video_container = QWidget()
+        self.video_container = VideoSurface()
         self.video_container.setStyleSheet('background: #05080f;')
         layers = QStackedLayout(self.video_container)
         layers.setStackingMode(QStackedLayout.StackAll)
@@ -131,29 +151,26 @@ class MainWindow(QMainWindow):
         self.video.setMinimumSize(320, 180)
         self.video.setAspectRatioMode(Qt.KeepAspectRatio)
         layers.addWidget(self.video)
-        self.music = QLabel('♫\n\nTHIÊN MEDIA PLAYER\n\nMở nhạc hoặc video để bắt đầu')
+        self.music = QLabel('▷\n\nTHIÊN // CYBER PLAYER\n\nMỞ NHẠC HOẶC VIDEO ĐỂ BẮT ĐẦU')
+        self.music.setTextFormat(Qt.PlainText)
         self.music.setAlignment(Qt.AlignCenter)
-        self.music.setStyleSheet('background: #0a1220; color: #88b7df; font-size: 24px;')
+        self.music.setStyleSheet('background: #080c18; color: #38dce9; font-size: 23px; letter-spacing: 2px;')
         layers.addWidget(self.music)
-        self.subtitle = QLabel('')
-        self.subtitle.setAlignment(Qt.AlignBottom | Qt.AlignHCenter)
-        self.subtitle.setWordWrap(True)
-        self.subtitle.setTextFormat(Qt.PlainText)
-        self.subtitle.setAttribute(Qt.WA_TransparentForMouseEvents)
-        self.subtitle.setStyleSheet('background: transparent; color: white; font-size: 23px; font-weight: 700; padding: 24px;')
-        layers.addWidget(self.subtitle)
-        layers.setCurrentWidget(self.subtitle)
+        self.subtitle = CaptionOverlay(self.video_container,self)
+        self.video_container.caption = self.subtitle
+        layers.setCurrentWidget(self.music)
         display.addWidget(self.video_container, 1)
         self.video.installEventFilter(self)
         self.music.installEventFilter(self)
         self.player.setVideoOutput(self.video)
+        self.video.hide()
         self.splitter.addWidget(self.display_panel)
 
-        self.list_panel = QFrame()
+        self.list_panel = CyberPanel()
         self.list_panel.setObjectName('panel')
         side = QVBoxLayout(self.list_panel)
         self.count = QLabel('DANH SÁCH PHÁT · 0 tệp')
-        self.count.setStyleSheet('font-weight: 700; color: #9cc8ec; padding: 3px;')
+        self.count.setStyleSheet('font-weight: 700; color: #f47fca; padding: 3px; letter-spacing: 1px;')
         side.addWidget(self.count)
         self.search = QLineEdit()
         self.search.setPlaceholderText('Tìm bài hát / video…')
@@ -213,7 +230,7 @@ class MainWindow(QMainWindow):
         self._button('Toàn màn hình', self.toggle_fullscreen, controls, 'F11 / F · Esc để thoát')
         outer.addLayout(controls)
 
-        jump_panel = QFrame()
+        jump_panel = CyberPanel()
         jump_panel.setObjectName('panel')
         jumps = QGridLayout(jump_panel)
         jumps.setContentsMargins(10, 8, 10, 8)
@@ -286,10 +303,15 @@ class MainWindow(QMainWindow):
         self.player.playbackStateChanged.connect(self.state_changed)
         self.player.mediaStatusChanged.connect(self.media_status)
         self.player.seekableChanged.connect(self.seekable_changed)
-        self.player.hasVideoChanged.connect(lambda has_video: self.music.setVisible(not has_video))
+        self.player.hasVideoChanged.connect(self.video_changed)
         self.player.metaDataChanged.connect(self.update_metadata)
         self.player.errorOccurred.connect(lambda error, text: self.statusBar().showMessage('Không phát được: ' + text))
         self.video.videoSink().subtitleTextChanged.connect(self.embedded_text)
+
+    def video_changed(self,has_video):
+        self.video.setVisible(has_video)
+        self.music.setVisible(not has_video)
+        if self.subtitle.text():self.subtitle.raise_()
 
     def add_sources(self, sources, autoplay=False):
         sources = list(sources)
@@ -589,6 +611,8 @@ class MainWindow(QMainWindow):
             'Ứng dụng không tự nâng độ phân giải hoặc giải mã nội dung DRM.')
 
     def eventFilter(self, watched, event):
+        if event.type() in (QEvent.WindowActivate,QEvent.WindowDeactivate):
+            QTimer.singleShot(0,self.subtitle,self.subtitle.position_overlay)
         if watched in (self.video, self.music) and event.type() == QEvent.MouseButtonDblClick:
             self.toggle_fullscreen()
             return True
@@ -647,6 +671,7 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage('Đã bỏ qua cài đặt cũ không hợp lệ.')
 
     def closeEvent(self, event):
+        self.subtitle.hide()
         self.save_position()
         self.settings.setValue('volume', self.volume.value())
         self.settings.setValue('remember', self.remember.isChecked())
@@ -656,6 +681,10 @@ class MainWindow(QMainWindow):
         self.player.stop()
         QApplication.instance().removeEventFilter(self)
         event.accept()
+
+    def moveEvent(self,event):
+        super().moveEvent(event)
+        if hasattr(self,'subtitle'):self.subtitle.position_overlay()
 
 
 def main():
