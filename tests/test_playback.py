@@ -1,4 +1,5 @@
 import os
+import hashlib
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 os.environ.setdefault('QT_MEDIA_BACKEND', 'ffmpeg')
 
@@ -46,6 +47,78 @@ class PlaybackTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.files.cleanup()
+
+    def test_restart_restores_last_video_and_each_file_position(self):
+        path = str(self.base/'resume-session.ini')
+        settings = QSettings(path, QSettings.IniFormat)
+        settings.clear()
+        w = MainWindow(settings)
+        w.show()
+        try:
+            w.add_sources([self.base/'long.mp4', self.base/'song.wav'], autoplay=True)
+            self.assertTrue(until(lambda: w.player.isSeekable() and w.player.duration() > 100000))
+            w.player.pause()
+            w.set_position(125000)
+            w.close()
+            APP.processEvents()
+            reopened = MainWindow(QSettings(path, QSettings.IniFormat))
+            reopened.show()
+            try:
+                self.assertTrue(until(lambda: 125000 <= reopened.player.position() < 127000))
+                self.assertEqual(reopened.queue.index, 0)
+                reopened.player.pause()
+                reopened.play_index(1)
+                self.assertTrue(until(lambda: reopened.player.duration() == 3000 and reopened.player.isSeekable()))
+                reopened.player.pause()
+                reopened.set_position(1500)
+                QTest.qWait(150)
+            finally:
+                reopened.close()
+                APP.processEvents()
+            audio = MainWindow(QSettings(path, QSettings.IniFormat))
+            audio.show()
+            try:
+                self.assertTrue(until(lambda: 1500 <= audio.player.position() < 2500))
+                self.assertEqual(audio.queue.index, 1)
+                audio.player.pause()
+                audio.play_index(0)
+                self.assertTrue(until(lambda: 125000 <= audio.player.position() < 127000))
+            finally:
+                audio.close()
+                APP.processEvents()
+        finally:
+            w.close()
+            APP.processEvents()
+
+    def test_pause_and_periodic_save_persist_and_remember_can_be_disabled(self):
+        w = self.make_window()
+        try:
+            w.add_sources([self.base/'long.mp4'], autoplay=True)
+            self.assertTrue(until(lambda: w.player.isSeekable()))
+            w.set_position(45000)
+            w.player.pause()
+            disk = QSettings(w.settings.fileName(), QSettings.IniFormat)
+            self.assertEqual(int(disk.value('index')), 0)
+            self.assertIn('45000', str(disk.value('resume/' + hashlib.sha256(w.player.source().toString().encode()).hexdigest())))
+            w.player.play()
+            w.set_position(90000)
+            w.resume_timer.setInterval(50)
+            self.assertTrue(until(lambda: int(QSettings(w.settings.fileName(), QSettings.IniFormat).value('resume/' + hashlib.sha256(w.player.source().toString().encode()).hexdigest())) >= 90000))
+            QTest.qWait(100)
+            w.stop()
+            w.save_session()
+            self.assertGreaterEqual(int(w.settings.value('resume/' + hashlib.sha256(w.player.source().toString().encode()).hexdigest())), 90000)
+            w.remember.setChecked(False)
+            w.close()
+            reopened = MainWindow(QSettings(w.settings.fileName(), QSettings.IniFormat))
+            try:
+                self.assertEqual(reopened.queue.items, [])
+                self.assertTrue(reopened.player.source().isEmpty())
+            finally:
+                reopened.close()
+        finally:
+            w.close()
+            APP.processEvents()
 
     def decode(self, filename):
         player, sink = QMediaPlayer(), QVideoSink()

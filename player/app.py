@@ -134,6 +134,10 @@ class MainWindow(QMainWindow):
         self.setStyleSheet(CYBER_STYLE)
         self.audio.setVolume(.7)
         self.restore()
+        self.resume_timer = QTimer(self)
+        self.resume_timer.setInterval(5000)
+        self.resume_timer.timeout.connect(self.save_session)
+        self.resume_timer.start()
         QApplication.instance().installEventFilter(self)
 
     def _button(self, text, callback, layout, tip=''):
@@ -385,7 +389,24 @@ class MainWindow(QMainWindow):
     def save_position(self):
         if self.remember.isChecked() and self.player.source().isValid():
             key = hashlib.sha256(self.player.source().toString().encode()).hexdigest()
-            self.settings.setValue('resume/' + key, self.player.position())
+            if not self.pending_position and not (self.player.playbackState() == QMediaPlayer.StoppedState and self.player.position() == 0):
+                self.settings.setValue('resume/' + key, self.player.position())
+
+    def save_session(self):
+        self.save_position()
+        self.settings.setValue('remember', self.remember.isChecked())
+        self.settings.setValue('playlist', json.dumps(self.queue.items if self.remember.isChecked() else []))
+        self.settings.setValue('index', self.queue.index)
+        self.settings.sync()
+
+    def apply_resume(self):
+        if (self.pending_position and self.player.duration() > 0 and self.player.isSeekable()
+                and self.player.playbackState() == QMediaPlayer.PlayingState
+                and self.player.mediaStatus() in (QMediaPlayer.LoadedMedia, QMediaPlayer.BufferedMedia)):
+            value = self.pending_position
+            self.pending_position = 0
+            if value < self.player.duration():
+                self.set_position(value)
 
     def play_uri(self, uri):
         self.save_position()
@@ -401,6 +422,7 @@ class MainWindow(QMainWindow):
         self.music.setText('♫\n\n' + source_title(uri))
         self.player.setSource(QUrl(uri))
         self.player.play()
+        QTimer.singleShot(0, self, self.apply_resume)
         self.list.setCurrentRow(self.queue.index)
         self.statusBar().showMessage('Đang mở: ' + source_title(uri))
 
@@ -415,6 +437,7 @@ class MainWindow(QMainWindow):
             self.open_files()
 
     def stop(self):
+        self.save_session()
         self.audio.reset()
         self.player.stop()
         self.set_position(0)
@@ -431,12 +454,10 @@ class MainWindow(QMainWindow):
                 self.play_uri(uri)
 
     def media_status(self, status):
-        if status in (QMediaPlayer.LoadedMedia, QMediaPlayer.BufferedMedia) and self.pending_position:
-            value = self.pending_position
-            self.pending_position = 0
-            if value < self.player.duration() - 3000:
-                self.set_position(value)
+        if status in (QMediaPlayer.LoadedMedia, QMediaPlayer.BufferedMedia):
+            QTimer.singleShot(0, self, self.apply_resume)
         if status == QMediaPlayer.EndOfMedia:
+            self.pending_position = 0
             source=self.player.source()
             def advance_if_ended():
                 if self.player.source()==source and self.player.mediaStatus()==QMediaPlayer.EndOfMedia:
@@ -445,8 +466,13 @@ class MainWindow(QMainWindow):
 
     def state_changed(self, state):
         self.play_button.setText('⏸ Tạm dừng' if state == QMediaPlayer.PlayingState else '▶ Phát')
+        if state == QMediaPlayer.PlayingState:
+            QTimer.singleShot(0, self, self.apply_resume)
+        if state == QMediaPlayer.PausedState:
+            self.save_session()
 
     def duration_changed(self, duration):
+        QTimer.singleShot(0, self, self.apply_resume)
         self.timeline.setRange(0, min(duration, 2147483647))
         self.duration_label.setText(time_label(duration))
 
@@ -475,6 +501,7 @@ class MainWindow(QMainWindow):
         self.player.setPlaybackRate(rate)
 
     def seekable_changed(self, value):
+        QTimer.singleShot(0, self, self.apply_resume)
         self.timeline.setEnabled(value)
         for button in self.seeking_buttons:
             button.setEnabled(value)
@@ -717,11 +744,14 @@ class MainWindow(QMainWindow):
                 self.add_sources(json.loads(self.settings.value('playlist', '[]')))
                 self.queue.select(int(self.settings.value('index', -1)))
                 self.list.setCurrentRow(self.queue.index)
+                if self.queue.items and 0 <= self.queue.index < len(self.queue.items):
+                    self.play_uri(self.queue.items[self.queue.index])
         except (ValueError, TypeError):
             self.statusBar().showMessage('Đã bỏ qua cài đặt cũ không hợp lệ.')
 
     def closeEvent(self, event):
         self.subtitle.hide()
+        self.resume_timer.stop()
         self.save_position()
         self.settings.setValue('volume', self.volume.value())
         self.settings.setValue('remember', self.remember.isChecked())

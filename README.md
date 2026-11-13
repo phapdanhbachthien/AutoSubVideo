@@ -1,10 +1,10 @@
 # Thiện Media Player // Cyber Edition
 
-[Tải Windows EXE portable (~217 MB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-Windows-x64.zip) · [Mã nguồn ZIP](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-source.zip) · [Ảnh giao diện](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-preview.png)
+[Tải Windows EXE portable (~217 MB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.3.0-preview/ThienMediaPlayer-Cyber-v0.3.0-Windows-x64.zip) · [Mã nguồn ZIP](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.3.0-preview/ThienMediaPlayer-Cyber-v0.3.0-source.zip) · [Ảnh giao diện](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.3.0-preview/ThienMediaPlayer-Cyber-v0.3.0-preview.png)
 
 Ứng dụng Windows riêng để nghe nhạc và xem video, không phụ thuộc AutoSubVideo. Giao diện cyberpunk tiếng Việt: nền lưới đen tím, neon cyan/hồng, khung vát góc và nút phát vàng neon. Qt 6 / FFmpeg xử lý media; hiệu ứng giao diện tĩnh không che vùng video.
 
-## Bản 0.2.0
+## Bản 0.3.0
 
 - Sửa đúng tên **Thiện**, gồm tiêu đề cửa sổ, giao diện và thông tin file EXE.
 - Thêm logo dựa trên ảnh Bách Thiện Audio người dùng cung cấp: header, màn hình nhạc, icon cửa sổ/taskbar và icon nhúng trong EXE.
@@ -33,7 +33,7 @@ Các định dạng thông dụng: MP4/MKV/MOV/AVI/WebM/WMV/MPEG/TS; MP3/FLAC/WA
 
 ## Dùng gói Windows portable
 
-1. Giải nén toàn bộ `ThienMediaPlayer-Cyber-v0.2.0-Windows-x64.zip`.
+1. Giải nén toàn bộ `ThienMediaPlayer-Cyber-v0.3.0-Windows-x64.zip`.
 2. Mở `ThienMediaPlayer.exe`. Giữ thư mục `python` và `player` cạnh file EXE; không cần cài Python riêng.
 3. Bấm **Mở tệp**, **Mở thư mục** hoặc kéo nhạc/video vào cửa sổ. Playlist mở bài bằng nhấp đôi hoặc Enter.
 4. Nếu có lỗi khởi động, chạy `Kiem-tra.cmd`; kết quả ở `diagnostics.json`. Log ở `%LOCALAPPDATA%\ThienMediaPlayer\logs\startup.log`.
@@ -86,7 +86,7 @@ Hoặc dùng `scripts/package-portable.py` với Windows CPython 3.12 x64, 4 whe
 python -m unittest discover -s tests -v
 ```
 
-Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy **16/16 bài kiểm tra** trên Linux/Xorg, gồm kiểm tra pixel video hiển thị thật, lớp phụ đề hiển thị trên video, playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
+Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy **18/18 bài kiểm tra** trên Linux/Xorg, gồm kiểm tra pixel video hiển thị thật, lớp phụ đề hiển thị trên video, playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
 
 Thiết lập cá nhân lưu qua QSettings, gồm playlist/vị trí khi bật nhớ. Khi phát triển có thể đặt `THIEN_PLAYER_CONFIG` tới tệp INI riêng. Các định dạng có DRM, Blu-ray/DVD menu, truyền Chromecast và cân bằng âm thanh EQ chưa nằm trong bản này.
 
@@ -94,3 +94,7 @@ Thiết lập cá nhân lưu qua QSettings, gồm playlist/vị trí khi bật n
 ## Kiểm tra âm thanh 500%
 
 Ngoài kiểm tra dữ liệu PCM, đã ghi lại đầu ra thật của QAudioSink qua thiết bị PulseAudio ảo trên Linux: RMS 100% = 0.06268189, RMS 500% = 0.31340778, tỉ lệ **4.99997 lần**. Đây là đo đường âm thanh phần mềm, không phải đo độ to vật lý của loa Windows. Các mẫu kiểm tra bao gồm mute, giới hạn đỉnh, tốc độ và xóa bộ đệm khi tua.
+
+## Xem tiếp khi mở lại — bản 0.3
+
+Mặc định tự mở lại tệp nhạc/video gần nhất và tiếp tục từ điểm đã lưu. Vị trí được nhớ riêng cho từng tệp, lưu mỗi 5 giây, khi tạm dừng, chuyển tệp và đóng ứng dụng. Trong menu Phát, bỏ chọn “Nhớ playlist và vị trí xem” để tắt. Khi dùng nút Dừng, điểm xem trước khi dừng vẫn được giữ để mở lại. Giữ tệp ở đường dẫn cũ để khôi phục được.
