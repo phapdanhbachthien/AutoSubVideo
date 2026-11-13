@@ -7,7 +7,7 @@ import sys
 os.environ.setdefault('QT_MEDIA_BACKEND', 'ffmpeg')
 
 from PySide6.QtCore import Qt, QUrl, QTimer, QSettings, QEvent, QSize, QPoint
-from PySide6.QtGui import QAction, QKeySequence, QFont, QImage
+from PySide6.QtGui import QAction, QKeySequence, QFont, QImage, QIcon, QPixmap
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QFrame, QLabel, QPushButton,
     QVBoxLayout, QHBoxLayout, QGridLayout, QSplitter, QSlider, QComboBox, QListWidget,
     QListWidgetItem, QLineEdit, QFileDialog, QMessageBox, QInputDialog, QStackedLayout,
@@ -18,6 +18,35 @@ from PySide6.QtMultimediaWidgets import QVideoWidget
 from .library import (Playlist, MEDIA_EXTENSIONS, SEEK_SECONDS, seek_target, time_label,
                       normalize_source, source_title, read_playlist, write_playlist, read_srt, caption_text)
 from .theme import STYLE as CYBER_STYLE, CyberBackground, CyberPanel
+from .audio import SoftwareAudioOutput
+
+ASSETS=Path(__file__).resolve().parent.parent/'assets'
+
+
+class MusicPanel(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.setStyleSheet('background: #080c18;')
+        layout=QVBoxLayout(self)
+        layout.addStretch()
+        logo=QLabel()
+        logo.setAlignment(Qt.AlignCenter)
+        logo.setPixmap(QPixmap(str(ASSETS/'app-icon.png')).scaled(250,250,Qt.KeepAspectRatio,Qt.SmoothTransformation))
+        layout.addWidget(logo)
+        self.title=QLabel('THIỆN // CYBER PLAYER')
+        self.title.setAlignment(Qt.AlignCenter)
+        self.title.setWordWrap(True)
+        self.title.setTextFormat(Qt.PlainText)
+        self.title.setStyleSheet('color: #38dce9; font-size: 22px; padding: 10px;')
+        layout.addWidget(self.title)
+        tagline=QLabel('BÁCH THIỆN AUDIO  /  NHẠC & VIDEO')
+        tagline.setAlignment(Qt.AlignCenter)
+        tagline.setStyleSheet('color: #c5a673; font-size: 12px;')
+        layout.addWidget(tagline)
+        layout.addStretch()
+
+    def setText(self,text):
+        self.title.setText(text)
 
 
 class SeekSlider(QSlider):
@@ -85,7 +114,8 @@ class CaptionOverlay(QLabel):
 class MainWindow(QMainWindow):
     def __init__(self, settings=None):
         super().__init__()
-        self.setWindowTitle('Thiên Media Player // Cyber Edition')
+        self.setWindowTitle('Thiện Media Player // Cyber Edition')
+        self.setWindowIcon(QIcon(str(ASSETS/'app-icon.ico')))
         self.resize(1260, 830)
         self.setMinimumSize(960, 680)
         self.setAcceptDrops(True)
@@ -97,8 +127,7 @@ class MainWindow(QMainWindow):
         self.pending_position = 0
         self.seeking_buttons = []
         self.player = QMediaPlayer(self)
-        self.audio = QAudioOutput(self)
-        self.player.setAudioOutput(self.audio)
+        self.audio = SoftwareAudioOutput(self.player,self)
         self._build_ui()
         self._menus()
         self._connect()
@@ -123,7 +152,10 @@ class MainWindow(QMainWindow):
         self.header = QWidget()
         head = QHBoxLayout(self.header)
         head.setContentsMargins(0, 0, 0, 0)
-        brand = QLabel('THIÊN // CYBER PLAYER')
+        logo=QLabel()
+        logo.setPixmap(QPixmap(str(ASSETS/'app-icon.png')).scaled(42,42,Qt.KeepAspectRatio,Qt.SmoothTransformation))
+        head.addWidget(logo)
+        brand = QLabel('THIỆN // CYBER PLAYER')
         brand.setStyleSheet('font-size: 23px; font-weight: 700; color: #49f3fa; letter-spacing: 2px;')
         head.addWidget(brand)
         self.quality = QLabel('FULL HD · 4K · 8K')
@@ -151,10 +183,7 @@ class MainWindow(QMainWindow):
         self.video.setMinimumSize(320, 180)
         self.video.setAspectRatioMode(Qt.KeepAspectRatio)
         layers.addWidget(self.video)
-        self.music = QLabel('▷\n\nTHIÊN // CYBER PLAYER\n\nMỞ NHẠC HOẶC VIDEO ĐỂ BẮT ĐẦU')
-        self.music.setTextFormat(Qt.PlainText)
-        self.music.setAlignment(Qt.AlignCenter)
-        self.music.setStyleSheet('background: #080c18; color: #38dce9; font-size: 23px; letter-spacing: 2px;')
+        self.music = MusicPanel()
         layers.addWidget(self.music)
         self.subtitle = CaptionOverlay(self.video_container,self)
         self.video_container.caption = self.subtitle
@@ -221,7 +250,10 @@ class MainWindow(QMainWindow):
         controls.addStretch()
         self.mute = self._button('Âm thanh', self.toggle_mute, controls, 'M · Bật/tắt tiếng')
         self.volume = QSlider(Qt.Horizontal)
-        self.volume.setRange(0, 100)
+        self.volume.setRange(0, 500)
+        self.volume.setSingleStep(5)
+        self.volume.setPageStep(25)
+        self.volume.setToolTip('0–100% bình thường · 100–500% khuếch đại PCM, có giới hạn đỉnh')
         self.volume.setValue(70)
         self.volume.setFixedWidth(110)
         self.volume_label = QLabel('70%')
@@ -271,6 +303,7 @@ class MainWindow(QMainWindow):
         self.remember.setChecked(True)
         self.track_menu = self.menuBar().addMenu('Âm thanh / phụ đề')
         self._action(self.track_menu, 'Chọn luồng âm thanh…', self.choose_audio)
+        self._action(self.track_menu, 'Âm lượng chuẩn 100%', lambda:self.volume.setValue(100), 'Ctrl+0')
         self._action(self.track_menu, 'Chọn phụ đề có sẵn trong video…', self.choose_embedded_subtitle)
         self._action(self.track_menu, 'Mở phụ đề SRT ngoài…', self.open_subtitles)
         self._action(self.track_menu, 'Tắt phụ đề', self.clear_subtitles)
@@ -297,7 +330,7 @@ class MainWindow(QMainWindow):
         self.timeline.sliderReleased.connect(self.release_seek)
         self.timeline.sliderMoved.connect(lambda value: self.elapsed.setText(time_label(value)))
         self.volume.valueChanged.connect(self.set_volume)
-        self.speed.currentTextChanged.connect(lambda text: self.player.setPlaybackRate(float(text.rstrip('×'))))
+        self.speed.currentTextChanged.connect(self.change_rate)
         self.player.durationChanged.connect(self.duration_changed)
         self.player.positionChanged.connect(self.position_changed)
         self.player.playbackStateChanged.connect(self.state_changed)
@@ -356,6 +389,7 @@ class MainWindow(QMainWindow):
 
     def play_uri(self, uri):
         self.save_position()
+        self.audio.reset()
         self.captions = []
         self.subtitle.clear()
         self.pending_position = 0
@@ -381,8 +415,9 @@ class MainWindow(QMainWindow):
             self.open_files()
 
     def stop(self):
+        self.audio.reset()
         self.player.stop()
-        self.player.setPosition(0)
+        self.set_position(0)
         self.save_position()
 
     def next_track(self, direction=1, automatic=False):
@@ -390,7 +425,7 @@ class MainWindow(QMainWindow):
         uri = self.queue.advance(direction, automatic=automatic, shuffle=self.shuffle.isChecked(), repeat=repeat)
         if uri:
             if self.player.source().toString() == uri:
-                self.player.setPosition(0)
+                self.set_position(0)
                 self.player.play()
             else:
                 self.play_uri(uri)
@@ -400,9 +435,13 @@ class MainWindow(QMainWindow):
             value = self.pending_position
             self.pending_position = 0
             if value < self.player.duration() - 3000:
-                self.player.setPosition(value)
+                self.set_position(value)
         if status == QMediaPlayer.EndOfMedia:
-            self.next_track(1, automatic=True)
+            source=self.player.source()
+            def advance_if_ended():
+                if self.player.source()==source and self.player.mediaStatus()==QMediaPlayer.EndOfMedia:
+                    self.next_track(1, automatic=True)
+            QTimer.singleShot(self.audio.pending_milliseconds()+10,self,advance_if_ended)
 
     def state_changed(self, state):
         self.play_button.setText('⏸ Tạm dừng' if state == QMediaPlayer.PlayingState else '▶ Phát')
@@ -419,12 +458,21 @@ class MainWindow(QMainWindow):
             self.subtitle.setText(caption_text(self.captions, position - self.subtitle_offset))
 
     def release_seek(self):
-        self.player.setPosition(self.timeline.value())
+        self.set_position(self.timeline.value())
         self.scrubbing = False
 
     def seek_by(self, milliseconds):
         if self.player.isSeekable():
-            self.player.setPosition(seek_target(self.player.position(), milliseconds, self.player.duration()))
+            self.set_position(seek_target(self.player.position(), milliseconds, self.player.duration()))
+
+    def set_position(self,value):
+        self.audio.reset(value)
+        self.player.setPosition(value)
+
+    def change_rate(self,text):
+        rate=float(text.rstrip('×'))
+        self.audio.setRate(rate)
+        self.player.setPlaybackRate(rate)
 
     def seekable_changed(self, value):
         self.timeline.setEnabled(value)
@@ -434,6 +482,7 @@ class MainWindow(QMainWindow):
     def set_volume(self, value):
         self.audio.setVolume(value / 100)
         self.volume_label.setText(f'{value}%')
+        self.volume_label.setStyleSheet('color: #e6ff43; font-weight: 700;' if value>100 else '')
 
     def toggle_mute(self):
         self.audio.setMuted(not self.audio.isMuted())
@@ -538,6 +587,7 @@ class MainWindow(QMainWindow):
         choices = [self._track_title(m, i) for i, m in enumerate(tracks)]
         choice, ok = QInputDialog.getItem(self, 'Chọn âm thanh', 'Luồng:', choices, max(0, self.player.activeAudioTrack()), False)
         if ok:
+            self.audio.reset(self.player.position())
             self.player.setActiveAudioTrack(choices.index(choice))
 
     def choose_embedded_subtitle(self):
@@ -578,7 +628,7 @@ class MainWindow(QMainWindow):
     def go_to(self):
         seconds, ok = QInputDialog.getInt(self, 'Đi đến thời gian', 'Số giây từ đầu tệp:', self.player.position()//1000, 0, self.player.duration()//1000)
         if ok and self.player.isSeekable():
-            self.player.setPosition(seconds*1000)
+            self.set_position(seconds*1000)
 
     def update_metadata(self):
         metadata = self.player.metaData()
@@ -633,7 +683,7 @@ class MainWindow(QMainWindow):
                            Qt.Key_N: lambda: self.next_track(1), Qt.Key_P: lambda: self.next_track(-1),
                            Qt.Key_PageDown: lambda: self.next_track(1), Qt.Key_PageUp: lambda: self.next_track(-1),
                            Qt.Key_S: self.stop, Qt.Key_F: self.toggle_fullscreen,
-                           Qt.Key_Home: lambda: self.player.setPosition(0),
+                           Qt.Key_Home: lambda: self.set_position(0),
                            Qt.Key_Up: lambda: self.volume.setValue(self.volume.value()+5),
                            Qt.Key_Down: lambda: self.volume.setValue(self.volume.value()-5),
                            Qt.Key_Delete: self.remove_selected}
@@ -661,7 +711,7 @@ class MainWindow(QMainWindow):
 
     def restore(self):
         try:
-            self.volume.setValue(max(0, min(100, int(self.settings.value('volume', 70)))))
+            self.volume.setValue(max(0, min(500, int(self.settings.value('volume', 70)))))
             self.remember.setChecked(str(self.settings.value('remember', 'true')).lower() == 'true')
             if self.remember.isChecked():
                 self.add_sources(json.loads(self.settings.value('playlist', '[]')))
@@ -678,6 +728,7 @@ class MainWindow(QMainWindow):
         self.settings.setValue('playlist', json.dumps(self.queue.items if self.remember.isChecked() else []))
         self.settings.setValue('index', self.queue.index)
         self.settings.sync()
+        self.audio.reset()
         self.player.stop()
         QApplication.instance().removeEventFilter(self)
         event.accept()
@@ -688,8 +739,13 @@ class MainWindow(QMainWindow):
 
 
 def main():
+    if sys.platform=='win32':
+        import ctypes
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID('BachThien.MediaPlayer.Cyber')
     app = QApplication(sys.argv)
-    app.setApplicationName('ThienMediaPlayer')
+    app.setWindowIcon(QIcon(str(ASSETS/'app-icon.ico')))
+    app.setApplicationName('Thiện Media Player')
+    app.setApplicationDisplayName('Thiện Media Player')
     app.setOrganizationName('BachThien')
     window = MainWindow()
     window.show()

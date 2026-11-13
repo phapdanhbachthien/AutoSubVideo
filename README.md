@@ -1,8 +1,16 @@
-# Thiên Media Player // Cyber Edition
+# Thiện Media Player // Cyber Edition
 
-[Tải Windows EXE portable (~234 MB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-Windows-x64.zip) · [Mã nguồn ZIP](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-source.zip) · [Ảnh giao diện](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-preview.png)
+[Tải Windows EXE portable (~217 MB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-Windows-x64.zip) · [Mã nguồn ZIP](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-source.zip) · [Ảnh giao diện](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.2.0-preview/ThienMediaPlayer-Cyber-v0.2.0-preview.png)
 
 Ứng dụng Windows riêng để nghe nhạc và xem video, không phụ thuộc AutoSubVideo. Giao diện cyberpunk tiếng Việt: nền lưới đen tím, neon cyan/hồng, khung vát góc và nút phát vàng neon. Qt 6 / FFmpeg xử lý media; hiệu ứng giao diện tĩnh không che vùng video.
+
+## Bản 0.2.0
+
+- Sửa đúng tên **Thiện**, gồm tiêu đề cửa sổ, giao diện và thông tin file EXE.
+- Thêm logo dựa trên ảnh Bách Thiện Audio người dùng cung cấp: header, màn hình nhạc, icon cửa sổ/taskbar và icon nhúng trong EXE.
+- Âm lượng lên đến 500% bằng xử lý PCM trước QAudioSink; không dùng mẹo đổi nhãn thanh trượt bị Qt chặn ở 100%.
+- Tín hiệu nhỏ giữ đúng gain x5; đỉnh lớn được nén mềm để tránh tràn mẫu. Mức 500% không thể khiến mọi nguồn đều nghe to gấp 5 lần vì giới hạn đỉnh và thiết bị.
+- Tốc độ phát dùng lấy mẫu lại trong đường PCM, có thể thay đổi cao độ. Bản này chưa có time-stretch giữ cao độ.
 
 ## Chức năng
 
@@ -10,7 +18,7 @@
 - Danh sách phát: tìm kiếm, kéo để đổi thứ tự, bỏ mục, xóa danh sách, sắp xếp A–Z, lưu/mở M3U/M3U8 UTF-8. Bỏ khỏi playlist không xóa tệp trên máy.
 - **Tua tiến và lùi: 5 giây, 10 giây, 30 giây, 1 phút, 5 phút, 10 phút**. Thanh tua kéo/nhấp; đi đến số giây cụ thể.
 - Phát ngẫu nhiên, lặp danh sách hoặc một bài; tự chuyển bài khi hết; nhớ playlist và vị trí xem (có thể tắt).
-- Âm lượng 0–100%, tắt tiếng; tốc độ 0,25×–4×.
+- Âm lượng **0–500%** bằng khuếch đại PCM thật, giới hạn đỉnh mềm chống tràn mẫu, tắt tiếng; tốc độ 0,25×–4×. `Ctrl+0` đưa âm lượng về 100%.
 - Toàn màn hình, luôn nổi trên cùng, tỉ lệ gốc/lấp đầy/kéo giãn; chụp khung hình PNG gốc; xem codec/độ phân giải/FPS.
 - Chọn luồng âm thanh và phụ đề nhúng; mở SRT UTF-8 ngoài, chỉnh sớm/muộn đến 60 giây.
 - Mở HTTP(S) trực tiếp tới tệp/luồng tương thích, không phải tải/trích video từ trang web.
@@ -25,12 +33,12 @@ Các định dạng thông dụng: MP4/MKV/MOV/AVI/WebM/WMV/MPEG/TS; MP3/FLAC/WA
 
 ## Dùng gói Windows portable
 
-1. Giải nén toàn bộ `ThienMediaPlayer-Cyber-Windows-x64.zip`.
+1. Giải nén toàn bộ `ThienMediaPlayer-Cyber-v0.2.0-Windows-x64.zip`.
 2. Mở `ThienMediaPlayer.exe`. Giữ thư mục `python` và `player` cạnh file EXE; không cần cài Python riêng.
 3. Bấm **Mở tệp**, **Mở thư mục** hoặc kéo nhạc/video vào cửa sổ. Playlist mở bài bằng nhấp đôi hoặc Enter.
 4. Nếu có lỗi khởi động, chạy `Kiem-tra.cmd`; kết quả ở `diagnostics.json`. Log ở `%LOCALAPPDATA%\ThienMediaPlayer\logs\startup.log`.
 
-Windows 10/11 64-bit. Gói có native launcher và runtime Python/Qt/FFmpeg đi kèm; không phải EXE một tệp độc lập. **Chưa chạy thử trực tiếp gói trên Windows.**
+Đóng bản cũ và giải nén vào **thư mục mới**. Windows 10/11 64-bit. Gói có native launcher và runtime Python/Qt/FFmpeg đi kèm; không phải EXE một tệp độc lập. **Chưa chạy thử trực tiếp gói trên Windows.**
 
 ## Phím tắt
 
@@ -78,6 +86,11 @@ Hoặc dùng `scripts/package-portable.py` với Windows CPython 3.12 x64, 4 whe
 python -m unittest discover -s tests -v
 ```
 
-Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy **10/10 bài kiểm tra** trên Linux/Xorg, gồm kiểm tra pixel video hiển thị thật, lớp phụ đề hiển thị trên video, playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
+Cần FFmpeg CLI cho việc tạo tệp thử; người dùng bản portable không cần FFmpeg CLI riêng. Đã chạy **16/16 bài kiểm tra** trên Linux/Xorg, gồm kiểm tra pixel video hiển thị thật, lớp phụ đề hiển thị trên video, playlist/lặp/ngẫu nhiên, SRT và Unicode, 12 nút tua bằng GUI với tệp 12 phút, thanh tua/phím tắt, chuyển bài/toàn màn hình, đồng hồ phát âm thanh và khung hình giải mã Full HD/8K thật. Môi trường thử không có loa: chưa kiểm chứng âm thanh phát ra thiết bị vật lý, tăng tốc GPU Windows, HDR hoặc độ mượt 8K.
 
 Thiết lập cá nhân lưu qua QSettings, gồm playlist/vị trí khi bật nhớ. Khi phát triển có thể đặt `THIEN_PLAYER_CONFIG` tới tệp INI riêng. Các định dạng có DRM, Blu-ray/DVD menu, truyền Chromecast và cân bằng âm thanh EQ chưa nằm trong bản này.
+
+
+## Kiểm tra âm thanh 500%
+
+Ngoài kiểm tra dữ liệu PCM, đã ghi lại đầu ra thật của QAudioSink qua thiết bị PulseAudio ảo trên Linux: RMS 100% = 0.06268189, RMS 500% = 0.31340778, tỉ lệ **4.99997 lần**. Đây là đo đường âm thanh phần mềm, không phải đo độ to vật lý của loa Windows. Các mẫu kiểm tra bao gồm mute, giới hạn đỉnh, tốc độ và xóa bộ đệm khi tua.

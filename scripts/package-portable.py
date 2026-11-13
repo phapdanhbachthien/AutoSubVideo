@@ -91,6 +91,7 @@ def main():
         packages.append(install_wheel(wheel,python_dir))
         print('Installed and verified '+wheel.name,flush=True)
     shutil.copytree(root/'player',output/'player',ignore=shutil.ignore_patterns('__pycache__','*.pyc'))
+    shutil.copytree(root/'assets',output/'assets')
     shutil.copyfile(root/'scripts/portable-bootstrap.py',output/'launch.py')
     shutil.copyfile(root/'scripts/portable-diagnose.py',output/'diagnose.py')
     shutil.copyfile(args.launcher,output/'ThienMediaPlayer.exe')
@@ -98,10 +99,11 @@ def main():
         shutil.copyfile(root/name,output/name)
     (output/'Kiem-tra.cmd').write_bytes(b'@echo off\r\ncd /d "%~dp0"\r\n"python\\python.exe" "diagnose.py"\r\npause\r\n')
     (output/'HUONG-DAN.txt').write_text(
-        'THIÊN MEDIA PLAYER — Windows 10/11 x64\n\n'
+        'THIỆN MEDIA PLAYER — Windows 10/11 x64\n\n'
         'Giải nén TOÀN BỘ ZIP, mở ThienMediaPlayer.exe. Không cần cài Python riêng.\n'
         'Giữ thư mục python và player cạnh executable.\n'
         'Mở tệp / thư mục hoặc kéo thả nhạc, video. Space: phát/tạm dừng; F11: toàn màn hình.\n'
+        'Âm lượng 0–500%, Ctrl+0 về 100%. Logo Bách Thiện Audio.\n'
         'Có đủ nút tua hai chiều 5s, 10s, 30s, 1/5/10 phút và danh sách phát.\n\n'
         'Hỗ trợ nguồn 8K; độ mượt tùy phần cứng, codec và bitrate.\n'
         'Đã thử giải mã khung hình Full HD và 8K trên Linux; chưa chạy gói Windows thực tế.\n'

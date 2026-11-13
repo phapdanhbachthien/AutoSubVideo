@@ -126,6 +126,34 @@ class PlaybackTests(unittest.TestCase):
             player.stop()
             player.setSource(QUrl())
 
+    def test_real_decoded_audio_is_amplified_five_times_and_ui_reaches_500(self):
+        from array import array
+        import math
+        w=self.make_window()
+        try:
+            self.assertEqual(w.volume.maximum(),500)
+            levels=[]
+            for percent in (100,500):
+                data=[]
+                def receive(raw):data.append(raw)
+                w.audio.processedBuffer.connect(receive)
+                w.volume.setValue(percent)
+                w.add_sources([self.base/'song.wav'],autoplay=True)
+                self.assertTrue(until(lambda:sum(len(x) for x in data)>100000))
+                w.player.pause()
+                w.audio.processedBuffer.disconnect(receive)
+                samples=array('f');samples.frombytes(b''.join(data))
+                levels.append(math.sqrt(sum(x*x for x in samples)/len(samples)))
+                w.stop()
+            self.assertAlmostEqual(levels[1]/levels[0],5,delta=.1)
+            self.assertEqual(w.audio.volume(),5)
+            self.assertEqual(w.audio.clock_output.volume(),0)
+            self.assertEqual(w.volume_label.text(),'500%')
+            self.assertIn('Thiện',w.windowTitle())
+            self.assertFalse(w.windowIcon().isNull())
+        finally:
+            w.close();APP.processEvents()
+
     def make_window(self):
         settings=QSettings(str(self.base/'settings.ini'), QSettings.IniFormat)
         settings.clear()

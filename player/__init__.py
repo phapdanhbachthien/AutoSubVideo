@@ -1,1 +1,1 @@
-"""Thiên Media Player — independent Windows music and video player."""
+"""Thiện Media Player — independent Windows music and video player."""

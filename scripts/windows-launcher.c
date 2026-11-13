@@ -20,12 +20,12 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE previous, PWSTR args, int show
     swprintf(command,32768,L"\"%ls\" \"%ls\\launch.py\" %ls",python,root,args);
     STARTUPINFOW startup={0}; PROCESS_INFORMATION process={0}; startup.cb=sizeof(startup);
     if (!CreateProcessW(python,command,NULL,NULL,FALSE,CREATE_NO_WINDOW,NULL,root,&startup,&process)) {
-        MessageBoxW(NULL,L"Hay giai nen TOAN BO ZIP, roi mo ThienMediaPlayer.exe. Giu thu muc python va player canh executable.",L"Thien Media Player",MB_OK|MB_ICONERROR);
+        MessageBoxW(NULL,L"Hay giai nen TOAN BO ZIP, roi mo ThienMediaPlayer.exe. Giu thu muc python va player canh executable.",L"Thiện Media Player",MB_OK|MB_ICONERROR);
         return 1;
     }
     WaitForSingleObject(process.hProcess,INFINITE);
     DWORD code=1;GetExitCodeProcess(process.hProcess,&code);
     CloseHandle(process.hThread);CloseHandle(process.hProcess);
-    if (code) MessageBoxW(NULL,L"Khong khoi dong duoc ung dung. Chay Kiem-tra.cmd; xem log tai %LOCALAPPDATA%\\ThienMediaPlayer\\logs\\startup.log.",L"Thien Media Player",MB_OK|MB_ICONERROR);
+    if (code) MessageBoxW(NULL,L"Khong khoi dong duoc ung dung. Chay Kiem-tra.cmd; xem log tai %LOCALAPPDATA%\\ThienMediaPlayer\\logs\\startup.log.",L"Thiện Media Player",MB_OK|MB_ICONERROR);
     return (int)code;
 }
