@@ -1,5 +1,7 @@
 # Thiên Media Player // Cyber Edition
 
+[Tải Windows EXE portable (~234 MB)](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-Windows-x64.zip) · [Mã nguồn ZIP](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-source.zip) · [Ảnh giao diện](https://github.com/phapdanhbachthien/AutoSubVideo/releases/download/thien-media-player-cyber-v0.1.0-preview/ThienMediaPlayer-Cyber-preview.png)
+
 Ứng dụng Windows riêng để nghe nhạc và xem video, không phụ thuộc AutoSubVideo. Giao diện cyberpunk tiếng Việt: nền lưới đen tím, neon cyan/hồng, khung vát góc và nút phát vàng neon. Qt 6 / FFmpeg xử lý media; hiệu ứng giao diện tĩnh không che vùng video.
 
 ## Chức năng
