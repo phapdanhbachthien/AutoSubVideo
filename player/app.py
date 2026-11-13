@@ -1,5 +1,4 @@
 from pathlib import Path
-import hashlib
 import json
 import os
 import sys
@@ -17,6 +16,7 @@ from PySide6.QtMultimediaWidgets import QVideoWidget
 
 from .library import (Playlist, MEDIA_EXTENSIONS, SEEK_SECONDS, seek_target, time_label,
                       normalize_source, source_title, read_playlist, write_playlist, read_srt, caption_text)
+from .resume import read_resume, write_resume
 from .theme import STYLE as CYBER_STYLE, CyberBackground, CyberPanel
 from .audio import SoftwareAudioOutput
 
@@ -388,9 +388,8 @@ class MainWindow(QMainWindow):
 
     def save_position(self):
         if self.remember.isChecked() and self.player.source().isValid():
-            key = hashlib.sha256(self.player.source().toString().encode()).hexdigest()
             if not self.pending_position and not (self.player.playbackState() == QMediaPlayer.StoppedState and self.player.position() == 0):
-                self.settings.setValue('resume/' + key, self.player.position())
+                write_resume(self.settings, self.player.source(), self.player.position())
 
     def save_session(self):
         self.save_position()
@@ -415,8 +414,7 @@ class MainWindow(QMainWindow):
         self.subtitle.clear()
         self.pending_position = 0
         if self.remember.isChecked():
-            key = hashlib.sha256(uri.encode()).hexdigest()
-            self.pending_position = int(self.settings.value('resume/' + key, 0))
+            self.pending_position = read_resume(self.settings, uri)
         self.now.setText(source_title(uri))
         self.now.setToolTip(uri)
         self.music.setText('♫\n\n' + source_title(uri))
